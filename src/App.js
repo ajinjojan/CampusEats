@@ -27,9 +27,7 @@ import {
   doc,
   onSnapshot,
   setDoc,
-  getDoc,
-  query,
-  orderBy
+  getDoc
 } from "firebase/firestore";
 
 /* ================= FIREBASE CONFIGURATION ================= */
