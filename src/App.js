@@ -85,34 +85,75 @@ const formatCurrency = (amount) => `₹${amount}`;
 /* ================= COMPONENTS ================= */
 
 // --- Shared UI Components ---
-const Button = ({ children, onClick, variant = "primary", className = "", disabled = false }) => {
-  const base = "px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100";
+const GlareButton = ({ children, onClick, variant = "primary", className = "", disabled = false, type = "button" }) => {
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200",
-    secondary: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100",
-    ghost: "text-slate-600 hover:bg-slate-100 bg-transparent",
-    success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+    primary: { bg: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)", glare: "#a5b4fc", text: "text-white" },
+    secondary: { bg: "rgba(255,255,255,0.9)", glare: "#6366f1", text: "text-slate-700 border border-slate-200" },
+    danger: { bg: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)", glare: "#f87171", text: "text-red-600" },
+    ghost: { bg: "transparent", glare: "#94a3b8", text: "text-slate-600" },
+    success: { bg: "linear-gradient(135deg, #059669 0%, #10b981 100%)", glare: "#6ee7b7", text: "text-white" }
   };
+  const v = variants[variant] || variants.primary;
+
   return (
-    <button disabled={disabled} onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
-      {children}
-    </button>
+    <GlareHover
+      width="100%"
+      height="auto"
+      background={v.bg}
+      borderRadius="12px"
+      borderColor="transparent"
+      glareColor={v.glare}
+      glareOpacity={0.3}
+      glareAngle={-30}
+      glareSize={200}
+      transitionDuration={400}
+      className={`${disabled ? 'opacity-50 pointer-events-none' : ''} ${className}`}
+      style={{ display: 'inline-flex' }}
+    >
+      <button 
+        type={type}
+        disabled={disabled} 
+        onClick={onClick} 
+        className={`w-full px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 ${v.text}`}
+      >
+        {children}
+      </button>
+    </GlareHover>
   );
+};
+
+// Simple button for non-glare uses
+const Button = ({ children, onClick, variant = "primary", className = "", disabled = false, type = "button", noGlare = false }) => {
+  if (noGlare) {
+    const base = "px-4 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100";
+    const variants = {
+      primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200",
+      secondary: "bg-white/90 backdrop-blur-sm text-slate-700 border border-slate-200 hover:bg-white shadow-sm",
+      danger: "bg-red-50 text-red-600 hover:bg-red-100",
+      ghost: "text-slate-600 hover:bg-slate-100 bg-transparent",
+      success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+    };
+    return (
+      <button type={type} disabled={disabled} onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
+        {children}
+      </button>
+    );
+  }
+  return <GlareButton type={type} onClick={onClick} variant={variant} className={className} disabled={disabled}>{children}</GlareButton>;
 };
 
 const Input = ({ label, ...props }) => (
   <div className="flex flex-col gap-1.5 w-full">
     {label && <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</label>}
     <input
-      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+      className="w-full px-4 py-3 rounded-xl border border-white/30 bg-white/70 backdrop-blur-sm focus:bg-white/90 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
       {...props}
     />
   </div>
 );
 
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-white p-4 rounded-2xl border border-slate-100 shadow-sm ${className}`}>
+const Card = ({ children, className = "", translucent = true }) => (
+  <div className={`${translucent ? 'bg-white/80 backdrop-blur-md' : 'bg-white'} p-4 rounded-2xl border border-white/30 shadow-lg ${className}`}>
     {children}
   </div>
 );
@@ -172,8 +213,8 @@ const AuthScreen = ({ role, onLogin, onSignup, setStep, setRole, currentTheme })
           <p className="text-white/80 mt-2">Ordering food made simple</p>
         </div>
 
-        <Card className="p-6 md:p-8 bg-white/95 backdrop-blur-md">
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-6">
+        <Card className="p-6 md:p-8 bg-white/70 backdrop-blur-xl">
+          <div className="flex gap-2 p-1 bg-white/50 rounded-xl mb-6">
             <button
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${isLogin ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
@@ -217,16 +258,15 @@ const AuthScreen = ({ role, onLogin, onSignup, setStep, setRole, currentTheme })
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm flex items-center gap-2"><ArrowRight size={14}/> {error}</div>}
+            {error && <div className="p-3 rounded-lg bg-red-500/20 backdrop-blur-sm text-red-700 text-sm flex items-center gap-2"><ArrowRight size={14}/> {error}</div>}
 
             <Button disabled={loading} type="submit" className="w-full">
               {loading ? "Processing..." : (isLogin ? "Log In" : "Create Account")}
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-100">
-             <Button variant="secondary" onClick={handleGoogle} className="w-full relative">
-                <span className="absolute left-4">G</span>
+          <div className="mt-6 pt-6 border-t border-white/30">
+             <Button variant="secondary" onClick={handleGoogle} className="w-full">
                 {isLogin ? "Log in with Google" : "Sign up with Google"}
              </Button>
           </div>
@@ -309,9 +349,15 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
   );
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden relative">
+    <div className="h-screen flex flex-col overflow-hidden relative">
+      {/* DarkVeil Background */}
+      <div className="absolute inset-0 z-0">
+        <DarkVeil theme={currentTheme} />
+      </div>
+      <div className="absolute inset-0 bg-black/10 z-0" />
+
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-10">
+      <header className="relative z-10 bg-white/70 backdrop-blur-md border-b border-white/30 px-4 py-3 flex justify-between items-center sticky top-0">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
             <Utensils size={16} />
@@ -320,38 +366,38 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
         </div>
         <div className="flex items-center gap-2">
            <ThemeSelector currentTheme={currentTheme} onThemeChange={onThemeChange} />
-           <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">{userProfile?.name || "Student"}</span>
-           <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+           <span className="text-xs font-medium text-slate-700 bg-white/50 backdrop-blur-sm px-2 py-1 rounded-full">{userProfile?.name || "Student"}</span>
+           <button onClick={logout} className="p-2 text-slate-500 hover:text-red-500 transition-colors">
             <LogOut size={18} />
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-24 relative">
+      <main className="flex-1 overflow-y-auto pb-24 relative z-10">
         
         {/* MENU VIEW */}
         {activeTab === "menu" && (
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-6 relative" style={{ minHeight: 'calc(100% + 5rem)' }}>
             <div className="relative">
               <Search className="absolute left-3 top-3 text-slate-400" size={20} />
               <input 
                 type="text" 
                 placeholder="Search food..." 
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/70 backdrop-blur-sm border border-white/30 focus:ring-2 focus:ring-indigo-500 outline-none"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
               {filteredMenu.map(item => (
-                <Card key={item.id} className="flex flex-col gap-3 hover:shadow-md transition-shadow">
+                <Card key={item.id} className="flex flex-col gap-3 hover:shadow-xl transition-shadow bg-white/70">
                   <div className="flex justify-between items-start">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color || 'bg-slate-100'}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color || 'bg-white/50'}`}>
                       {item.image}
                     </div>
-                    <span className="text-sm font-semibold text-slate-900 bg-slate-100 px-2 py-1 rounded-md">{formatCurrency(item.price)}</span>
+                    <span className="text-sm font-semibold text-slate-900 bg-white/50 px-2 py-1 rounded-md">{formatCurrency(item.price)}</span>
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-800">{item.name}</h3>
@@ -359,7 +405,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
                   </div>
                   <Button 
                     variant="secondary" 
-                    className="w-full mt-auto py-2 text-sm text-indigo-600 border-indigo-100 hover:bg-indigo-50"
+                    className="w-full mt-auto"
                     onClick={() => addItem(item)}
                   >
                     Add to Cart
@@ -368,21 +414,44 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
               ))}
             </div>
             
+            {/* GradualBlur at bottom of menu content */}
+            <GradualBlur
+              target="parent"
+              position="bottom"
+              height="6rem"
+              strength={2}
+              divCount={5}
+              curve="bezier"
+              exponential
+              opacity={1}
+            />
+            
             {/* Floating Cart Button for Mobile */}
             {cartCount > 0 && (
               <div className="fixed bottom-20 left-4 right-4 z-20">
-                <button 
-                  onClick={() => setActiveTab("cart")}
-                  className="w-full bg-slate-900 text-white p-4 rounded-xl shadow-xl flex justify-between items-center animate-in slide-in-from-bottom-4"
+                <GlareHover
+                  width="100%"
+                  height="auto"
+                  background="linear-gradient(135deg, #1e293b 0%, #334155 100%)"
+                  borderRadius="12px"
+                  borderColor="transparent"
+                  glareColor="#6366f1"
+                  glareOpacity={0.3}
+                  transitionDuration={400}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-indigo-500 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
-                      {cartCount}
+                  <button 
+                    onClick={() => setActiveTab("cart")}
+                    className="w-full text-white p-4 flex justify-between items-center"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-indigo-500 w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
+                        {cartCount}
+                      </div>
+                      <span className="font-medium">View Cart</span>
                     </div>
-                    <span className="font-medium">View Cart</span>
-                  </div>
-                  <span className="font-bold">{formatCurrency(cartTotal)}</span>
-                </button>
+                    <span className="font-bold">{formatCurrency(cartTotal)}</span>
+                  </button>
+                </GlareHover>
               </div>
             )}
           </div>
@@ -391,47 +460,47 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
         {/* CART VIEW */}
         {activeTab === "cart" && (
           <div className="p-4 max-w-2xl mx-auto h-full flex flex-col">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Your Cart</h2>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-6">Your Cart</h2>
             
             {cart.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 space-y-4">
+              <div className="flex-1 flex flex-col items-center justify-center text-white/70 space-y-4">
                 <ShoppingBag size={64} strokeWidth={1} />
                 <p>Your cart is empty</p>
-                <Button variant="ghost" onClick={() => setActiveTab("menu")}>Browse Menu</Button>
+                <Button variant="ghost" onClick={() => setActiveTab("menu")} noGlare>Browse Menu</Button>
               </div>
             ) : (
               <div className="space-y-4 flex-1">
                 {cart.map(item => (
-                  <div key={item.id} className="bg-white p-4 rounded-xl border border-slate-100 flex items-center gap-4 shadow-sm">
+                  <div key={item.id} className="bg-white/70 backdrop-blur-md p-4 rounded-xl border border-white/30 flex items-center gap-4 shadow-lg">
                     <div className="text-2xl">{item.image}</div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-slate-800">{item.name}</h4>
                       <p className="text-sm text-slate-500">{formatCurrency(item.price)}</p>
                     </div>
-                    <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-1">
+                    <div className="flex items-center gap-3 bg-white/50 rounded-lg p-1">
                       <button onClick={() => updateQty(item.id, -1)} className="p-1 hover:bg-white rounded-md transition-colors"><Minus size={14}/></button>
                       <span className="text-sm font-medium w-4 text-center">{item.qty}</span>
                       <button onClick={() => updateQty(item.id, 1)} className="p-1 hover:bg-white rounded-md transition-colors"><Plus size={14}/></button>
                     </div>
-                    <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-red-500 p-2">
+                    <button onClick={() => removeItem(item.id)} className="text-slate-400 hover:text-red-500 p-2">
                       <Trash2 size={18} />
                     </button>
                   </div>
                 ))}
                 
-                <div className="mt-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                <Card className="mt-8 p-6 space-y-4">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal</span>
                     <span>{formatCurrency(cartTotal)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-xl text-slate-900 pt-4 border-t border-slate-100">
+                  <div className="flex justify-between font-bold text-xl text-slate-900 pt-4 border-t border-white/30">
                     <span>Total</span>
                     <span>{formatCurrency(cartTotal)}</span>
                   </div>
-                  <Button onClick={handlePlaceOrder} className="w-full py-4 text-lg shadow-indigo-200">
+                  <Button onClick={handlePlaceOrder} className="w-full">
                     Place Order
                   </Button>
-                </div>
+                </Card>
               </div>
             )}
           </div>
@@ -440,7 +509,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
         {/* ORDERS VIEW (Student) */}
         {activeTab === "orders" && (
           <div className="p-4 max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Order History</h2>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-6">Order History</h2>
             <div className="space-y-6">
               {orders.filter(o => o.studentUid === user.uid).sort((a,b) => b.timestamp - a.timestamp).map(order => {
                 // Generate the display code from the order ID (e.g., ORD-1234 -> 1234)
@@ -449,13 +518,13 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
                 return (
                   <Card key={order.orderId} className={`overflow-hidden border-l-4 ${order.orderStatus === 'Served' ? 'border-l-green-500 opacity-80' : 'border-l-indigo-500'}`}>
                     {order.orderStatus === "Placed" && (
-                      <div className="bg-indigo-50 -m-4 mb-4 p-6 flex flex-col items-center justify-center text-center border-b border-indigo-100">
-                        <div className="bg-white p-2 rounded-xl mb-3 shadow-sm">
+                      <div className="bg-indigo-500/20 backdrop-blur-sm -m-4 mb-4 p-6 flex flex-col items-center justify-center text-center border-b border-indigo-200/30">
+                        <div className="bg-white/80 backdrop-blur-sm p-2 rounded-xl mb-3 shadow-lg">
                           <QrCode size={80} className="text-slate-800"/>
                         </div>
-                        <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Pickup Code</p>
+                        <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1">Pickup Code</p>
                         <h3 className="text-4xl font-black text-indigo-600 tracking-wider font-mono">{pickupCode}</h3>
-                        <p className="text-xs text-slate-500 mt-2">Show this code to the staff to collect your order</p>
+                        <p className="text-xs text-slate-600 mt-2">Show this code to the staff to collect your order</p>
                       </div>
                     )}
                     
@@ -464,7 +533,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-slate-800">Order #{pickupCode}</h3>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${
-                            order.orderStatus === "Served" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                            order.orderStatus === "Served" ? "bg-green-500/20 text-green-700" : "bg-blue-500/20 text-blue-700"
                           }`}>
                             {order.orderStatus}
                           </span>
@@ -476,7 +545,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
                     
                     <div className="space-y-2">
                       {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-sm text-slate-600 border-b border-slate-50 last:border-0 pb-2 last:pb-0">
+                        <div key={idx} className="flex justify-between text-sm text-slate-600 border-b border-white/20 last:border-0 pb-2 last:pb-0">
                           <span>{item.qty}x {item.name}</span>
                           <span>{formatCurrency(item.price * item.qty)}</span>
                         </div>
@@ -484,7 +553,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
                     </div>
                     
                     {order.orderStatus === "Served" && (
-                      <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+                      <div className="mt-4 pt-3 border-t border-white/20 text-center">
                         <p className="text-xs text-green-600 font-medium flex items-center justify-center gap-1">
                           <CheckCircle size={12}/> Order Picked Up
                         </p>
@@ -495,7 +564,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
               })}
               
               {orders.filter(o => o.studentUid === user.uid).length === 0 && (
-                 <div className="text-center text-slate-400 py-10">No orders yet</div>
+                 <div className="text-center text-white/60 py-10">No orders yet</div>
               )}
             </div>
           </div>
@@ -504,10 +573,10 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
         {/* PROFILE VIEW */}
         {activeTab === "profile" && (
           <div className="p-4 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">My Profile</h2>
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-6">My Profile</h2>
             <Card className="space-y-4">
               <div className="flex justify-center mb-4">
-                 <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl font-bold">
+                 <div className="w-20 h-20 bg-indigo-500/30 backdrop-blur-sm text-indigo-600 rounded-full flex items-center justify-center text-2xl font-bold">
                     {profileForm.name ? profileForm.name[0].toUpperCase() : <User />}
                  </div>
               </div>
@@ -536,20 +605,8 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
         )}
       </main>
 
-      {/* GradualBlur at bottom of content */}
-      <GradualBlur
-        target="parent"
-        position="bottom"
-        height="5rem"
-        strength={1.5}
-        divCount={4}
-        curve="ease-out"
-        opacity={0.9}
-        style={{ bottom: '72px' }}
-      />
-
       {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-slate-200 flex justify-around items-center p-2 pb-safe sticky bottom-0 z-50">
+      <nav className="relative z-10 bg-white/80 backdrop-blur-md border-t border-white/30 flex justify-around items-center p-2 pb-safe sticky bottom-0">
         {[
           { id: "menu", icon: Utensils, label: "Menu" },
           { id: "cart", icon: ShoppingBag, label: "Cart", badge: cartCount },
@@ -560,7 +617,7 @@ const StudentApp = ({ menu, orders, addToOrder, user, userProfile, updateUserPro
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex flex-col items-center p-2 rounded-xl transition-all w-16 ${
-              activeTab === tab.id ? "text-indigo-600 bg-indigo-50" : "text-slate-400 hover:text-slate-600"
+              activeTab === tab.id ? "text-indigo-600 bg-indigo-500/20" : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <div className="relative">
@@ -643,65 +700,65 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      <header className="relative text-white px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-20 overflow-hidden">
-        {/* DarkVeil Header Background */}
-        <div className="absolute inset-0 z-0">
-          <DarkVeil theme={currentTheme} speed={0.2} />
-        </div>
-        <div className="absolute inset-0 bg-slate-900/60 z-0" />
-        
-        <div className="flex items-center gap-3 relative z-10">
+    <div className="min-h-screen flex flex-col relative">
+      {/* DarkVeil Full Background */}
+      <div className="fixed inset-0 z-0">
+        <DarkVeil theme={currentTheme} />
+      </div>
+      <div className="fixed inset-0 bg-black/20 z-0" />
+
+      <header className="relative z-10 text-white px-6 py-4 flex justify-between items-center shadow-md sticky top-0 bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div className="flex items-center gap-3">
           <ChefHat className="text-orange-400" />
           <div>
              <h1 className="font-bold text-lg leading-none">Kitchen Dashboard</h1>
-             <p className="text-xs text-slate-400">Manage orders efficiently</p>
+             <p className="text-xs text-white/60">Manage orders efficiently</p>
           </div>
         </div>
         
-        <div className="flex gap-2 relative z-10">
+        <div className="flex gap-2">
            <ThemeSelector currentTheme={currentTheme} onThemeChange={onThemeChange} />
            <button 
              onClick={() => setActiveTab("dashboard")} 
-             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'dashboard' ? 'bg-orange-500 text-white' : 'text-slate-300 hover:text-white'}`}
+             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'dashboard' ? 'bg-orange-500 text-white' : 'text-white/70 hover:text-white'}`}
            >
              Orders
            </button>
            <button 
              onClick={() => setActiveTab("menu")} 
-             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'menu' ? 'bg-orange-500 text-white' : 'text-slate-300 hover:text-white'}`}
+             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'menu' ? 'bg-orange-500 text-white' : 'text-white/70 hover:text-white'}`}
            >
              Menu
            </button>
-           <button onClick={logout} className="ml-4 p-2 bg-slate-800/50 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
+           <button onClick={logout} className="ml-4 p-2 bg-white/10 rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
              <LogOut size={18}/>
            </button>
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-6 max-w-7xl mx-auto w-full relative z-10">
         {activeTab === "dashboard" && (
           <>
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <Card className="flex items-center gap-4 border-l-4 border-l-blue-500">
-                 <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><Clock/></div>
+                 <div className="p-3 bg-blue-500/20 text-blue-400 rounded-full"><Clock/></div>
                  <div>
-                    <p className="text-sm text-slate-500 font-medium">Pending Orders</p>
+                    <p className="text-sm text-slate-600 font-medium">Pending Orders</p>
                     <p className="text-2xl font-bold text-slate-800">{stats.pending}</p>
                  </div>
               </Card>
               <Card className="flex items-center gap-4 border-l-4 border-l-green-500">
-                 <div className="p-3 bg-green-50 text-green-600 rounded-full"><CheckCircle/></div>
+                 <div className="p-3 bg-green-500/20 text-green-500 rounded-full"><CheckCircle/></div>
                  <div>
-                    <p className="text-sm text-slate-500 font-medium">Completed</p>
+                    <p className="text-sm text-slate-600 font-medium">Completed</p>
                     <p className="text-2xl font-bold text-slate-800">{stats.served}</p>
                  </div>
               </Card>
               <Card className="flex items-center gap-4 border-l-4 border-l-indigo-500">
-                 <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full"><CreditCard/></div>
+                 <div className="p-3 bg-indigo-500/20 text-indigo-500 rounded-full"><CreditCard/></div>
                  <div>
-                    <p className="text-sm text-slate-500 font-medium">Total Revenue</p>
+                    <p className="text-sm text-slate-600 font-medium">Total Revenue</p>
                     <p className="text-2xl font-bold text-slate-800">{formatCurrency(stats.revenue)}</p>
                  </div>
               </Card>
@@ -715,8 +772,8 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
                   onClick={() => setFilter(f)}
                   className={`px-5 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap ${
                     filter === f 
-                    ? "bg-slate-900 text-white shadow-md" 
-                    : "bg-white text-slate-600 hover:bg-slate-200"
+                    ? "bg-white/90 text-slate-800 shadow-lg backdrop-blur-sm" 
+                    : "bg-white/30 backdrop-blur-sm text-white hover:bg-white/50"
                   }`}
                 >
                   {f === "Placed" ? "Pending" : f}
@@ -727,8 +784,8 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
             {/* Orders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOrders.map(order => (
-                <Card key={order.orderId} className={`flex flex-col h-full hover:shadow-lg transition-all ${order.orderStatus === "Served" ? "opacity-75 bg-slate-50" : "border-indigo-100"}`}>
-                  <div className="flex justify-between items-start mb-4 pb-4 border-b border-slate-100">
+                <Card key={order.orderId} className={`flex flex-col h-full hover:shadow-xl transition-all ${order.orderStatus === "Served" ? "opacity-75" : ""}`}>
+                  <div className="flex justify-between items-start mb-4 pb-4 border-b border-white/20">
                      <div>
                         {/* HIDE ORDER ID from Staff to force verification */}
                         <div className="flex items-center gap-2 mb-1">
@@ -738,7 +795,7 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
                         <p className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                      </div>
                      <div className="text-right">
-                        <p className="font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded">{formatCurrency(order.totalAmount)}</p>
+                        <p className="font-bold text-slate-900 bg-white/50 px-2 py-1 rounded">{formatCurrency(order.totalAmount)}</p>
                      </div>
                   </div>
 
@@ -746,7 +803,7 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
                      {order.items.map((item, i) => (
                        <div key={i} className="flex justify-between items-center text-sm">
                           <div className="flex items-center gap-2">
-                             <span className="bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded text-xs">{item.qty}x</span>
+                             <span className="bg-white/50 text-slate-700 font-bold px-2 py-0.5 rounded text-xs">{item.qty}x</span>
                              <span className="text-slate-700">{item.name}</span>
                           </div>
                        </div>
@@ -759,12 +816,12 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
                          setSelectedOrder(order);
                          setVerifyModalOpen(true);
                        }}
-                       className="w-full mt-auto bg-slate-900 hover:bg-slate-800 text-white"
+                       className="w-full mt-auto"
                     >
                        Verify & Serve <QrCode size={18}/>
                     </Button>
                   ) : (
-                    <div className="mt-auto text-center py-2 bg-green-100 text-green-700 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
+                    <div className="mt-auto text-center py-2 bg-green-500/20 text-green-700 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
                        <CheckCircle size={16}/> Served
                     </div>
                   )}
@@ -772,7 +829,7 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
               ))}
               
               {filteredOrders.length === 0 && (
-                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
+                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-white/50">
                     <Coffee size={48} className="mb-4 opacity-20"/>
                     <p>No orders found for this filter.</p>
                  </div>
@@ -785,7 +842,7 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
         {activeTab === "menu" && (
           <div className="max-w-4xl mx-auto">
              <div className="flex justify-between items-center mb-6">
-               <h2 className="text-2xl font-bold text-slate-800">Menu Management</h2>
+               <h2 className="text-2xl font-bold text-white drop-shadow-lg">Menu Management</h2>
                <Button onClick={() => {
                  setMenuForm({ name: "", price: "", category: "", desc: "", image: "🍲" });
                  setEditingItemId(null);
@@ -797,8 +854,8 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {menu.map(item => (
-                 <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-start gap-4">
-                    <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center text-3xl">
+                 <Card key={item.id} className="flex items-start gap-4">
+                    <div className="w-16 h-16 bg-white/50 rounded-lg flex items-center justify-center text-3xl">
                       {item.image}
                     </div>
                     <div className="flex-1">
@@ -808,15 +865,15 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
                       </div>
                       <p className="text-sm text-slate-500 mb-2">{item.category}</p>
                       <div className="flex gap-2 mt-2">
-                        <button onClick={() => openEditMenu(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <button onClick={() => openEditMenu(item)} className="p-1.5 text-blue-600 hover:bg-blue-500/20 rounded-lg transition-colors">
                           <Edit size={16}/>
                         </button>
-                        <button onClick={() => onDeleteMenu(item.docId)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <button onClick={() => onDeleteMenu(item.docId)} className="p-1.5 text-red-600 hover:bg-red-500/20 rounded-lg transition-colors">
                           <Trash2 size={16}/>
                         </button>
                       </div>
                     </div>
-                 </div>
+                 </Card>
                ))}
              </div>
           </div>
@@ -825,10 +882,10 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
 
       {/* VERIFICATION MODAL */}
       {verifyModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 border border-white/30">
              <div className="text-center mb-6">
-               <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+               <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
                  <QrCode size={32}/>
                </div>
                <h3 className="text-xl font-bold text-slate-900">Verify Order</h3>
@@ -855,8 +912,8 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
 
       {/* MENU EDIT MODAL */}
       {isEditingMenu && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl w-full max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh] border border-white/30">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-900">{editingItemId ? "Edit Item" : "New Item"}</h3>
               <button onClick={() => setIsEditingMenu(false)} className="text-slate-400 hover:text-slate-600"><X/></button>
@@ -884,18 +941,19 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
 
 
 // --- Theme Selector Component ---
-const ThemeSelector = ({ currentTheme, onThemeChange }) => {
+const ThemeSelector = ({ currentTheme, onThemeChange, variant = "dark" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ThemeIcon = THEME_ICONS[currentTheme] || Palette;
 
+  const buttonClass = variant === "dark" 
+    ? "p-2 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-all flex items-center gap-2"
+    : "p-2 bg-slate-800/80 backdrop-blur-sm rounded-lg text-white hover:bg-slate-800 transition-all flex items-center gap-2";
+
   return (
     <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-3 bg-white/20 backdrop-blur-sm rounded-xl text-white hover:bg-white/30 transition-all flex items-center gap-2"
-      >
-        <ThemeIcon size={20} />
-        <span className="text-sm font-medium capitalize hidden sm:inline">{currentTheme}</span>
+      <button onClick={() => setIsOpen(!isOpen)} className={buttonClass}>
+        <ThemeIcon size={18} />
+        <span className="text-xs font-medium capitalize hidden sm:inline">{currentTheme}</span>
       </button>
       
       {isOpen && (
@@ -955,27 +1013,27 @@ const RoleSelector = ({ onSelect, currentTheme, onThemeChange }) => (
          <GlareHover
            width="100%"
            height="auto"
-           background="rgba(255,255,255,0.95)"
+           background="rgba(255,255,255,0.7)"
            borderRadius="24px"
            borderColor="rgba(99,102,241,0.3)"
            glareColor="#6366f1"
-           glareOpacity={0.2}
+           glareOpacity={0.3}
            glareAngle={-30}
            glareSize={300}
            transitionDuration={600}
-           className="cursor-pointer"
+           className="cursor-pointer backdrop-blur-md"
            style={{ minHeight: '220px' }}
          >
            <button 
              onClick={() => onSelect("student")}
              className="w-full h-full p-8 flex flex-col items-center text-center gap-4"
            >
-             <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-2">
+             <div className="w-20 h-20 bg-indigo-500/20 backdrop-blur-sm text-indigo-600 rounded-2xl flex items-center justify-center mb-2">
                 <User size={40} />
              </div>
              <div>
                 <h3 className="text-xl font-bold text-slate-800">Student</h3>
-                <p className="text-sm text-slate-500 mt-2">Browse menu, place orders, and track your food history.</p>
+                <p className="text-sm text-slate-600 mt-2">Browse menu, place orders, and track your food history.</p>
              </div>
            </button>
          </GlareHover>
@@ -983,27 +1041,27 @@ const RoleSelector = ({ onSelect, currentTheme, onThemeChange }) => (
          <GlareHover
            width="100%"
            height="auto"
-           background="rgba(255,255,255,0.95)"
+           background="rgba(255,255,255,0.7)"
            borderRadius="24px"
            borderColor="rgba(249,115,22,0.3)"
            glareColor="#f97316"
-           glareOpacity={0.2}
+           glareOpacity={0.3}
            glareAngle={-30}
            glareSize={300}
            transitionDuration={600}
-           className="cursor-pointer"
+           className="cursor-pointer backdrop-blur-md"
            style={{ minHeight: '220px' }}
          >
            <button 
              onClick={() => onSelect("staff")}
              className="w-full h-full p-8 flex flex-col items-center text-center gap-4"
            >
-             <div className="w-20 h-20 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-2">
+             <div className="w-20 h-20 bg-orange-500/20 backdrop-blur-sm text-orange-600 rounded-2xl flex items-center justify-center mb-2">
                 <ChefHat size={40} />
              </div>
              <div>
                 <h3 className="text-xl font-bold text-slate-800">Canteen Staff</h3>
-                <p className="text-sm text-slate-500 mt-2">Manage incoming orders, update status, and view sales.</p>
+                <p className="text-sm text-slate-600 mt-2">Manage incoming orders, update status, and view sales.</p>
              </div>
            </button>
          </GlareHover>
