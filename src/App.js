@@ -4,8 +4,12 @@ import {
   CheckCircle, User, LogOut,
   Coffee, Clock, Search, Plus, Minus,
   ChefHat, Trash2, ArrowRight, QrCode,
-  Edit, PlusCircle, X
+  Edit, PlusCircle, X, Palette
 } from "lucide-react";
+
+import DarkVeil, { THEMES } from "./components/DarkVeil";
+import GradualBlur from "./components/GradualBlur";
+import GlareHover from "./components/GlareHover";
 
 import { initializeApp } from "firebase/app";
 import {
@@ -840,15 +844,129 @@ const StaffApp = ({ orders, updateOrder, logout, menu, onUpdateMenu, onDeleteMen
 };
 
 
+// --- Component Demo ---
+const ComponentDemo = ({ onBack }) => {
+  const [selectedTheme, setSelectedTheme] = useState('default');
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700 p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <ArrowRight size={16} className="rotate-180" />
+            Back to App
+          </button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Palette size={24} />
+            Component Showcase
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-6 space-y-12">
+        {/* Theme Selector */}
+        <div className="bg-slate-800 rounded-2xl p-6">
+          <h2 className="text-2xl font-bold mb-4">DarkVeil Theme Selector</h2>
+          <div className="flex flex-wrap gap-3">
+            {Object.keys(THEMES).map(theme => (
+              <button
+                key={theme}
+                onClick={() => setSelectedTheme(theme)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  selectedTheme === theme
+                    ? 'bg-indigo-600 text-white shadow-lg'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                {theme.charAt(0).toUpperCase() + theme.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* DarkVeil Demo */}
+        <section className="relative rounded-2xl overflow-hidden" style={{ height: '600px' }}>
+          <DarkVeil
+            theme={selectedTheme}
+            speed={THEMES[selectedTheme]?.speed || 0.5}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl p-8 text-center">
+              <h3 className="text-3xl font-bold mb-2">DarkVeil Background</h3>
+              <p className="text-slate-300">Theme: {selectedTheme}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* GradualBlur Demo */}
+        <section style={{ position: 'relative', height: '500px', overflow: 'hidden' }} className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl">
+          <div style={{ height: '100%', overflowY: 'auto', padding: '6rem 2rem' }}>
+            <div className="space-y-4 text-white">
+              <h3 className="text-2xl font-bold">GradualBlur Component</h3>
+              <p>This section demonstrates the gradual blur effect at the bottom.</p>
+              <p>Scroll down to see the blur effect in action.</p>
+              <div className="space-y-2 mt-8">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <p>Content item {i + 1} - Scroll to see the blur effect</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <GradualBlur
+            target="parent"
+            position="bottom"
+            height="7rem"
+            strength={2}
+            divCount={5}
+            curve="bezier"
+            exponential
+            opacity={1}
+          />
+        </section>
+
+        {/* GlareHover Demo */}
+        <section className="flex items-center justify-center min-h-[400px]">
+          <GlareHover
+            width="100%"
+            height="400px"
+            background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            borderRadius="20px"
+            borderColor="#8b5cf6"
+            glareColor="#ffffff"
+            glareOpacity={0.3}
+            glareAngle={-30}
+            glareSize={300}
+            transitionDuration={800}
+            playOnce={false}
+            className="max-w-2xl"
+          >
+            <div className="text-center p-8">
+              <h2 style={{ fontSize: '3rem', fontWeight: '900', color: '#fff', margin: 0 }}>
+                Hover Me
+              </h2>
+              <p className="text-white/80 mt-4 text-lg">Move your mouse over this card to see the glare effect</p>
+            </div>
+          </GlareHover>
+        </section>
+      </div>
+    </div>
+  );
+};
+
 // --- Role Selector ---
-const RoleSelector = ({ onSelect }) => (
+const RoleSelector = ({ onSelect, onShowDemo }) => (
   <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
     <div className="text-center mb-10 animate-in slide-in-from-top-10 fade-in duration-700">
        <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Campus Eats</h1>
        <p className="text-lg text-slate-500">Choose your portal to continue</p>
     </div>
     
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mb-6">
        <button 
          onClick={() => onSelect("student")}
          className="group relative bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-indigo-500 flex flex-col items-center text-center gap-4 overflow-hidden"
@@ -877,13 +995,21 @@ const RoleSelector = ({ onSelect }) => (
          </div>
        </button>
     </div>
+
+    <button
+      onClick={onShowDemo}
+      className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
+    >
+      <Palette size={20} />
+      View Component Demo
+    </button>
   </div>
 );
 
 /* ================= MAIN CONTROLLER ================= */
 
 export default function App() {
-  const [step, setStep] = useState("role"); // role | auth | app
+  const [step, setStep] = useState("role"); // role | auth | app | demo
   const [role, setRole] = useState(null); // student | staff
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -1033,8 +1159,12 @@ export default function App() {
   };
 
   /* --- RENDER --- */
+  if (step === "demo") {
+    return <ComponentDemo onBack={() => setStep("role")} />;
+  }
+
   if (step === "role") {
-    return <RoleSelector onSelect={handleRoleSelect} />;
+    return <RoleSelector onSelect={handleRoleSelect} onShowDemo={() => setStep("demo")} />;
   }
 
   if (step === "auth") {

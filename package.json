@@ -10,6 +10,8 @@
     "@testing-library/user-event": "^13.5.0",
     "firebase": "^12.8.0",
     "lucide-react": "^0.562.0",
+    "mathjs": "^15.1.0",
+    "ogl": "^1.0.11",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-scripts": "^5.0.1",
